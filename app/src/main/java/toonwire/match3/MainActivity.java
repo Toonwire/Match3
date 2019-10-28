@@ -2,15 +2,15 @@ package toonwire.match3;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private Match3Grid match3Grid;
@@ -20,26 +20,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Map<NodeElement, Drawable> nodeElementDrawableMap = new HashMap<>();
+        nodeElementDrawableMap.put(NodeElement.FIRE, getResources().getDrawable(R.drawable.ic_element_fire, null));
+        nodeElementDrawableMap.put(NodeElement.WATER, getResources().getDrawable(R.drawable.ic_element_water, null));
+        nodeElementDrawableMap.put(NodeElement.GRASS, getResources().getDrawable(R.drawable.ic_element_grass, null));
+        nodeElementDrawableMap.put(NodeElement.LIGHT, getResources().getDrawable(R.drawable.ic_element_light, null));
+        nodeElementDrawableMap.put(NodeElement.DARK, getResources().getDrawable(R.drawable.ic_element_dark, null));
+
+
         match3Grid = new Match3Grid(5,6);
-        match3GridView = new Match3GridView(this, match3Grid,true);
-
-
-
-        List<NodeElement> nodeElements = new ArrayList<>();
-        nodeElements.add(NodeElement.FIRE);
-        nodeElements.add(NodeElement.WATER);
-        nodeElements.add(NodeElement.GRASS);
-        nodeElements.add(NodeElement.DARK);
-        nodeElements.add(NodeElement.LIGHT);
-
-        match3Grid.setNodeElements(nodeElements);
+        match3Grid.setNodeElements(nodeElementDrawableMap.keySet());
         match3Grid.fillRandom();
 
-        printGrid();
 
-        List<List<Tile>> matchingTiles = match3Grid.findMatches();
-        for (List<Tile> list : matchingTiles)
-            Log.d("match", list.toString());
+        match3GridView = new Match3GridView(this, match3Grid,true);
+        match3GridView.setNodeDrawables(nodeElementDrawableMap);
+
+        printGrid();
+        printMatches();
+
 
         ViewGroup contentView = (ViewGroup) getLayoutInflater().inflate(R.layout.activity_main, null);
 
@@ -63,6 +62,12 @@ public class MainActivity extends AppCompatActivity {
             builder.append("\n");
         }
         Log.d("grid layout", builder.toString());
+    }
+
+    private void printMatches() {
+        List<List<Tile>> matchingTiles = match3Grid.findMatches();
+        for (List<Tile> list : matchingTiles)
+            Log.d("match", list.toString());
     }
 
 

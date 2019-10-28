@@ -6,9 +6,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class Match3GridView extends View {
@@ -23,6 +25,10 @@ public class Match3GridView extends View {
     private Paint gridPaint;
     private Paint backgroundPaint;
     private Paint borderPaint;
+
+    private Map<NodeElement, Drawable> nodeElementDrawableMap;
+    private Drawable[][] nodeDrawableGrid;
+    private int nodeDrawablePaddingX, nodeDrawablePaddingY;
 
 
     public Match3GridView(Context context, Match3Grid grid) {
@@ -41,7 +47,7 @@ public class Match3GridView extends View {
 
         backgroundPaint = new Paint();
         backgroundPaint.setStyle(Paint.Style.FILL);
-        backgroundPaint.setColor(Color.GREEN);
+        backgroundPaint.setColor(Color.DKGRAY);
 
         borderPaint = new Paint();
         borderPaint.setColor(Color.BLACK);
@@ -50,6 +56,23 @@ public class Match3GridView extends View {
 
         cornerRadius = 25;
 
+
+    }
+
+    private Drawable getNodeDrawables(NodeElement element) {
+        return nodeElementDrawableMap.get(element);
+    }
+
+    public void setNodeDrawables(Map<NodeElement, Drawable> nodeElementDrawableMap) {
+        this.nodeElementDrawableMap = nodeElementDrawableMap;
+
+        // setup node drawables of the grid
+        nodeDrawableGrid = new Drawable[grid.getNumRows()][grid.getNumCols()];
+        for (int row = 0; row < grid.getNumRows(); row++) {
+            for (int col = 0; col < grid.getNumCols(); col++) {
+                nodeDrawableGrid[row][col] = nodeElementDrawableMap.get(grid.getTiles()[row][col].getNode().getElement());
+            }
+        }
     }
 
     private void calculateGridDimensions() {
@@ -70,6 +93,11 @@ public class Match3GridView extends View {
         viewWidth = this.getWidth();
         viewHeight = this.getHeight();
         gridRect = new RectF(0,0, viewWidth, viewHeight);
+
+        // make padding a percentage of tile dimens to adjust across sizes/resolutions
+        double paddingFraction = 0.05;
+        nodeDrawablePaddingX = (int) (paddingFraction*tileWidth);
+        nodeDrawablePaddingY = (int) (paddingFraction*tileHeight);
 
         invalidate();
     }
@@ -99,11 +127,15 @@ public class Match3GridView extends View {
         // draw border
         canvas.drawRoundRect(0,0,viewWidth, viewHeight, cornerRadius, cornerRadius, borderPaint);
 
-        // draw nodes
-//        Drawable d = getResources().getDrawable(R.drawable.foobar, null);
-//        d.setBounds(left, top, right, bottom);
-//        d.draw(canvas);
 
+        // draw nodes
+        // set bounds of the node drawables
+        for (int row = 0; row < grid.getNumRows(); row++) {
+            for (int col = 0; col < grid.getNumCols(); col++) {
+                nodeDrawableGrid[row][col].setBounds(col*tileWidth+nodeDrawablePaddingX, row*tileHeight+nodeDrawablePaddingY, (col+1)*tileWidth-nodeDrawablePaddingX, (row+1)*tileHeight-nodeDrawablePaddingY);
+                nodeDrawableGrid[row][col].draw(canvas);
+            }
+        }
     }
 
 

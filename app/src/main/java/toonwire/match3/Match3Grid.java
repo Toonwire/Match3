@@ -1,6 +1,8 @@
 package toonwire.match3;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -51,8 +53,8 @@ public class Match3Grid {
         return this.nodeElements;
     }
 
-    public void setNodeElements(List<NodeElement> nodeElements) {
-        this.nodeElements = nodeElements;
+    public void setNodeElements(Collection<NodeElement> nodeElements) {
+        this.nodeElements = new ArrayList<NodeElement>(nodeElements);
     }
 
     public int getNumRows() {
