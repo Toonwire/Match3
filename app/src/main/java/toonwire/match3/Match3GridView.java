@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
@@ -11,117 +12,99 @@ import java.util.List;
 import java.util.Random;
 
 public class Match3GridView extends View {
-    private int numRows, numCols;
+    private Match3Grid grid;
+    private RectF gridRect;
+
+    private int viewWidth, viewHeight;
     private int tileWidth, tileHeight;
     private boolean squareDimensions;
-    private Tile[][] tiles;
-    private List<NodeElement> nodeElements;
+    private int cornerRadius;
 
-    private Paint paint;
+    private Paint gridPaint;
+    private Paint backgroundPaint;
+    private Paint borderPaint;
 
 
-    public Match3GridView(Context context) {
-        this(context, false);
+    public Match3GridView(Context context, Match3Grid grid) {
+        this(context, grid, true);
     }
 
-    public Match3GridView(Context context, boolean squareDimensions) {
+    public Match3GridView(Context context, Match3Grid grid, boolean squareDimensions) {
         super(context);
         this.squareDimensions = squareDimensions;
-        paint = new Paint();
-        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        this.grid = grid;
+        calculateGridDimensions();
+
+        gridPaint = new Paint();
+        gridPaint.setStyle(Paint.Style.STROKE);
+        gridPaint.setStrokeWidth(2);
+
+        backgroundPaint = new Paint();
+        backgroundPaint.setStyle(Paint.Style.FILL);
+        backgroundPaint.setColor(Color.GREEN);
+
+        borderPaint = new Paint();
+        borderPaint.setColor(Color.BLACK);
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(10);
+
+        cornerRadius = 25;
+
     }
 
-    public int getNumRows() {
-        return numRows;
-    }
+    private void calculateGridDimensions() {
+        int numRows = grid.getNumRows();
+        int numCols = grid.getNumCols();
 
-    public void setNumRows(int rows) {
-        this.numRows = rows;
-        calculateDimensions();
-    }
-
-    public int getNumCols() {
-        return numRows;
-    }
-
-    public void setNumCols(int cols) {
-        this.numCols = cols;
-        calculateDimensions();
-    }
-
-    public Tile[][] getTiles() {
-        return this.tiles;
-    }
-
-    private void calculateDimensions() {
         if (numRows < 1 || numCols < 1) return;
-
         tileWidth = this.getWidth() / numCols;
         tileHeight = this.getHeight() / numRows;
 
+        // lower bound dictates square dimensions
         if (squareDimensions) {
             if (tileWidth < tileHeight)
                 tileHeight = tileWidth;
             else
                 tileWidth = tileHeight;
         }
-        tiles = new Tile[numCols][numRows];
+        viewWidth = this.getWidth();
+        viewHeight = this.getHeight();
+        gridRect = new RectF(0,0, viewWidth, viewHeight);
 
-        makeTiles();
         invalidate();
     }
 
-    private void makeTiles() {
-        for (int col = 0; col < tiles.length; col++) {
-            for (int row = 0; row < tiles[col].length; row++) {
-                tiles[col][row] = new Tile(tileWidth, tileHeight);
-            }
-        }
-    }
-    public List<NodeElement> getNodeElements() {
-        return this.nodeElements;
-    }
-
-    public void setNodeElements(List<NodeElement> nodeElements) {
-        this.nodeElements = nodeElements;
-    }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        calculateDimensions();
+        calculateGridDimensions();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawColor(Color.GREEN);
 
-        int width = this.getWidth();
-        int height = this.getHeight();
+        // draw background
+        canvas.drawRoundRect(gridRect, cornerRadius, cornerRadius, backgroundPaint);
 
-        for (int col = 1; col < numCols; col++) {
-            canvas.drawLine(col * tileWidth, 0, col * tileWidth, height, paint);
+        // draw grid
+        for (int row = 1; row < grid.getNumRows(); row++) {
+            canvas.drawLine(0, row * tileHeight, viewWidth, row * tileHeight, gridPaint);
         }
 
-        for (int row = 1; row < numRows; row++) {
-            canvas.drawLine(0, row * tileHeight, width, row * tileHeight, paint);
+        for (int col = 1; col < grid.getNumCols(); col++) {
+            canvas.drawLine(col * tileWidth, 0, col * tileWidth, viewHeight, gridPaint);
         }
 
+        // draw border
+        canvas.drawRoundRect(0,0,viewWidth, viewHeight, cornerRadius, cornerRadius, borderPaint);
+
+        // draw nodes
 //        Drawable d = getResources().getDrawable(R.drawable.foobar, null);
 //        d.setBounds(left, top, right, bottom);
 //        d.draw(canvas);
 
     }
 
-    public void fillRandom() {
-        Random r = new Random();
-        int random = 0;
-        for (int row = 0; row < tiles.length; row++) {
-            for (int col = 0; col < tiles[row].length; col++) {
-                random = r.nextInt(nodeElements.size());
-                Node randomNode = new Node(nodeElements.get(random));
-                tiles[row][col].setNode(randomNode);
-            }
-        }
-    }
+
 }
