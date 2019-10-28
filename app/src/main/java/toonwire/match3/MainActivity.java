@@ -20,6 +20,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
+//        Match3Controller match3Controller = new Match3Controller(model, view);
+//        match3Controller.setupGame(level);
+
+
         Map<NodeElement, Drawable> nodeElementDrawableMap = new HashMap<>();
         nodeElementDrawableMap.put(NodeElement.FIRE, getResources().getDrawable(R.drawable.ic_element_fire, null));
         nodeElementDrawableMap.put(NodeElement.WATER, getResources().getDrawable(R.drawable.ic_element_water, null));
@@ -38,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
         printGrid();
         printMatches();
-
 
         ViewGroup contentView = (ViewGroup) getLayoutInflater().inflate(R.layout.activity_main, null);
 
