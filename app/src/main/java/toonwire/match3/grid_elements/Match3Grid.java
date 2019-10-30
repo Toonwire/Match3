@@ -1,43 +1,30 @@
-package toonwire.match3;
+package toonwire.match3.grid_elements;
 
-import java.lang.reflect.Array;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 public class Match3Grid {
     private int rows, cols;
     private Tile[][] tiles;
-    private List<NodeElement> nodeElements;
+    private Map<NodeElement, Drawable> nodeElementDrawableMap;
 
     public Match3Grid(int rows, int cols) {
         this(rows, cols, null);
     }
 
-    public Match3Grid(int rows, int cols, List<NodeElement> nodeElements) {
+    public Match3Grid(int rows, int cols, Map<NodeElement, Drawable> nodeElementDrawableMap) {
         this.rows = rows;
         this.cols = cols;
-        this.nodeElements = nodeElements;
+        this.nodeElementDrawableMap = nodeElementDrawableMap;
         makeTiles();
-    }
-
-    public void fillRandom() {
-        Random r = new Random();
-        int random = 0;
-        for (int row = 0; row < tiles.length; row++) {
-            for (int col = 0; col < tiles[row].length; col++) {
-                random = r.nextInt(nodeElements.size());
-                Node randomNode = new Node(nodeElements.get(random));
-                tiles[row][col].setNode(randomNode);
-            }
-        }
-    }
-
-    public Tile[][] getTiles() {
-        return this.tiles;
     }
 
     private void makeTiles() {
@@ -49,12 +36,35 @@ public class Match3Grid {
         }
     }
 
-    public List<NodeElement> getNodeElements() {
-        return this.nodeElements;
+    public Tile[][] getTiles() {
+        return this.tiles;
     }
 
-    public void setNodeElements(Collection<NodeElement> nodeElements) {
-        this.nodeElements = new ArrayList<NodeElement>(nodeElements);
+    public void fillRandom() {
+        try {
+            Random r = new Random();
+            List<NodeElement> nodeElements = new ArrayList<>(nodeElementDrawableMap.keySet());
+            int random = 0;
+            for (int row = 0; row < tiles.length; row++) {
+                for (int col = 0; col < tiles[row].length; col++) {
+                    random = r.nextInt(getNodeElements().keySet().size());
+                    NodeElement randomElement = nodeElements.get(random);
+                    Drawable nodeDrawable = nodeElementDrawableMap.get(randomElement);
+
+                    tiles[row][col].setNode(new Node(randomElement, nodeDrawable));
+                }
+            }
+        } catch (NullPointerException e) {
+            Log.d("filling grid failed", "No node elements set for the grid");
+        }
+    }
+
+    public Map<NodeElement, Drawable> getNodeElements() {
+        return this.nodeElementDrawableMap;
+    }
+
+    public void setNodeElements(Map<NodeElement, Drawable> nodeElementDrawableMap) {
+        this.nodeElementDrawableMap = nodeElementDrawableMap;
     }
 
     public int getNumRows() {

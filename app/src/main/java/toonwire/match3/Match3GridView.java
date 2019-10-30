@@ -4,14 +4,19 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.View;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
+
+import toonwire.match3.grid_elements.Match3Grid;
+import toonwire.match3.grid_elements.NodeElement;
+import toonwire.match3.grid_elements.Tile;
 
 public class Match3GridView extends View {
     private Match3Grid grid;
@@ -26,9 +31,9 @@ public class Match3GridView extends View {
     private Paint backgroundPaint;
     private Paint borderPaint;
 
-    private Map<NodeElement, Drawable> nodeElementDrawableMap;
-    private Drawable[][] nodeDrawableGrid;
     private int nodeDrawablePaddingX, nodeDrawablePaddingY;
+    private Tile movingTile;
+    private int touchX, touchY;
 
 
     public Match3GridView(Context context, Match3Grid grid) {
@@ -56,23 +61,6 @@ public class Match3GridView extends View {
 
         cornerRadius = 25;
 
-
-    }
-
-    private Drawable getNodeDrawables(NodeElement element) {
-        return nodeElementDrawableMap.get(element);
-    }
-
-    public void setNodeDrawables(Map<NodeElement, Drawable> nodeElementDrawableMap) {
-        this.nodeElementDrawableMap = nodeElementDrawableMap;
-
-        // setup node drawables of the grid
-        nodeDrawableGrid = new Drawable[grid.getNumRows()][grid.getNumCols()];
-        for (int row = 0; row < grid.getNumRows(); row++) {
-            for (int col = 0; col < grid.getNumCols(); col++) {
-                nodeDrawableGrid[row][col] = nodeElementDrawableMap.get(grid.getTiles()[row][col].getNode().getElement());
-            }
-        }
     }
 
     private void calculateGridDimensions() {
@@ -95,13 +83,19 @@ public class Match3GridView extends View {
         gridRect = new RectF(0,0, viewWidth, viewHeight);
 
         // make padding a percentage of tile dimens to adjust across sizes/resolutions
-        double paddingFraction = 0.05;
-        nodeDrawablePaddingX = (int) (paddingFraction*tileWidth);
-        nodeDrawablePaddingY = (int) (paddingFraction*tileHeight);
+        double tilePaddingFraction = 0.05;
+        nodeDrawablePaddingX = (int) (tilePaddingFraction * tileWidth);
+        nodeDrawablePaddingY = (int) (tilePaddingFraction * tileHeight);
 
         invalidate();
     }
 
+    public int getTileWidth() {
+        return tileWidth;
+    }
+    public int getTileHeight() {
+        return tileHeight;
+    }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -115,7 +109,7 @@ public class Match3GridView extends View {
         // draw background
         canvas.drawRoundRect(gridRect, cornerRadius, cornerRadius, backgroundPaint);
 
-        // draw grid
+        // draw grid of tiles
         for (int row = 1; row < grid.getNumRows(); row++) {
             canvas.drawLine(0, row * tileHeight, viewWidth, row * tileHeight, gridPaint);
         }
@@ -132,11 +126,51 @@ public class Match3GridView extends View {
         // set bounds of the node drawables
         for (int row = 0; row < grid.getNumRows(); row++) {
             for (int col = 0; col < grid.getNumCols(); col++) {
-                nodeDrawableGrid[row][col].setBounds(col*tileWidth+nodeDrawablePaddingX, row*tileHeight+nodeDrawablePaddingY, (col+1)*tileWidth-nodeDrawablePaddingX, (row+1)*tileHeight-nodeDrawablePaddingY);
-                nodeDrawableGrid[row][col].draw(canvas);
+                if (grid.getTiles()[row][col] == movingTile) continue;
+                grid.getTiles()[row][col].getNode().getDrawable().setBounds(
+                        col*tileWidth+nodeDrawablePaddingX,
+                        row*tileHeight+nodeDrawablePaddingY,
+                        (col+1)*tileWidth-nodeDrawablePaddingX,
+                        (row+1)*tileHeight-nodeDrawablePaddingY
+                );
+
+                grid.getTiles()[row][col].getNode().getDrawable().draw(canvas);
             }
+        }
+
+        if (movingTile != null) {
+
+            // draw node element of moving tile at touch position
+            // touch position should be middle of node element
+            // meaing the drawing bounds is skewed up and left
+
+            movingTile.getNode().getDrawable().setBounds(
+                    touchX - tileWidth/2 + nodeDrawablePaddingX,
+                    touchY - tileHeight/2 + nodeDrawablePaddingY,
+                    touchX + tileWidth/2 - nodeDrawablePaddingX,
+                    touchY + tileHeight/2 - nodeDrawablePaddingY
+            );
+
+            Log.d("moving tile", ""+movingTile.getNode().getDrawable().getBounds());
+            movingTile.getNode().getDrawable().draw(canvas);
         }
     }
 
+    // doesn't do anything, just to get rid of annoying warning
+    @Override
+    public boolean performClick() {
+        super.performClick();
+        return true;
+    }
+
+    public void setMovingTile(int x, int y) {
+        setMovingTile(movingTile, x, y);
+    }
+
+    public void setMovingTile(Tile movingTile, int touchX, int touchY) {
+        this.movingTile = movingTile;
+        this.touchX = touchX;
+        this.touchY = touchY;
+    }
 
 }

@@ -1,4 +1,4 @@
-package toonwire.match3;
+package toonwire.match3.grid_elements;
 
 public class Tile {
     private int row, col;
@@ -13,6 +13,7 @@ public class Tile {
         this.col = col;
         this.node = node;
     }
+
     public Node getNode() {
         return node;
     }
@@ -21,8 +22,17 @@ public class Tile {
         this.node = n;
     }
 
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
     @Override
     public String toString() {
         return "("+row+","+col+"): " + node.toString();
     }
+
 }
