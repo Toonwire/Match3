@@ -1,5 +1,5 @@
 package toonwire.match3;
 
 public enum NodeElement {
-    FIRE, WATER, GRASS, DARK, LIGHT;
+    FIRE, WATER, GRASS, DARK, LIGHT, HEALING;
 }
