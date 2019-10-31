@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         match3GridModel = new Match3Grid(5,6);
-        match3GridView = new Match3GridView(this, match3GridModel,true);
+        match3GridView = new Match3GridView(this, match3GridModel);
         Match3Controller match3Controller = new Match3Controller(match3GridModel, match3GridView);
         match3Controller.setupGame(this);
 
@@ -33,34 +33,7 @@ public class MainActivity extends AppCompatActivity {
         match3GridLayout.addView(match3GridView);
         setContentView(contentView);
 
-        // console debugging
-        printGrid();
-        printMatches();
 
-    }
-
-
-    // for debugging purposes
-    private void printGrid() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(" \n\n");
-
-        Tile[][] grid = match3GridModel.getTiles();
-        for (int row = 0; row < grid.length; row++) {
-            for (int col = 0; col < grid[row].length; col++) {
-                builder.append(grid[row][col].getNode().toString());
-                builder.append("\t");
-            }
-            builder.append("\n");
-        }
-        builder.append(" \n");
-        Log.d("grid layout", builder.toString());
-    }
-
-    private void printMatches() {
-        List<List<Tile>> matchingTiles = match3GridModel.findMatches();
-        for (List<Tile> list : matchingTiles)
-            Log.d("match", list.toString());
     }
 
 

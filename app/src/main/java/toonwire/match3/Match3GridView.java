@@ -126,7 +126,11 @@ public class Match3GridView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        //TODO: only draw the entire grid when needed, ie. when swaps happen
+        /*
+         * TODO: No need to draw entire grid at each onDraw.
+         *  Grid remains 90% the same after each draw
+         *  Possible to only draw actually updating elements?
+         */
 
         // draw background
         canvas.drawRoundRect(gridRect, cornerRadius, cornerRadius, backgroundPaint);

@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,6 +45,10 @@ public class Match3Controller {
         match3GridModel.fillRandom();
 
         setupViewListeners();
+
+        // console debugging
+        printGrid();
+        printMatches();
     }
 
     private void setupViewListeners() {
@@ -81,6 +86,8 @@ public class Match3Controller {
                     case MotionEvent.ACTION_UP:
                         match3GridView.setHoveringNode(null);
                         match3GridView.setHoveredTile(null);
+                        printGrid();
+                        printMatches();
                         break;
 
                     default:
@@ -110,5 +117,30 @@ public class Match3Controller {
         }
         return touchedTile;
     }
+
+
+    // for debugging purposes
+    private void printGrid() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(" \n\n");
+
+        Tile[][] grid = match3GridModel.getTiles();
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[row].length; col++) {
+                builder.append(grid[row][col].getNode().toString());
+                builder.append("\t");
+            }
+            builder.append("\n");
+        }
+        builder.append(" \n");
+        Log.d("grid layout", builder.toString());
+    }
+
+    private void printMatches() {
+        List<List<Tile>> matchingTiles = match3GridModel.findMatches();
+        for (List<Tile> list : matchingTiles)
+            Log.d("match", list.toString());
+    }
+
 
 }
