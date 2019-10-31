@@ -4,18 +4,11 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
-import android.util.Log;
-import android.view.DragEvent;
 import android.view.View;
 
-import java.util.Map;
-
 import toonwire.match3.grid_elements.Match3Grid;
-import toonwire.match3.grid_elements.NodeElement;
+import toonwire.match3.grid_elements.Node;
 import toonwire.match3.grid_elements.Tile;
 
 public class Match3GridView extends View {
@@ -24,15 +17,17 @@ public class Match3GridView extends View {
 
     private int viewWidth, viewHeight;
     private int tileWidth, tileHeight;
+
     private boolean squareDimensions;
     private int cornerRadius;
+    private int nodeDrawablePaddingX, nodeDrawablePaddingY;
 
     private Paint gridPaint;
     private Paint backgroundPaint;
     private Paint borderPaint;
 
-    private int nodeDrawablePaddingX, nodeDrawablePaddingY;
-    private Tile movingTile;
+    private Node hoveringNode;
+    private Tile hoveredTile;
     private int touchX, touchY;
 
 
@@ -60,7 +55,6 @@ public class Match3GridView extends View {
         borderPaint.setStrokeWidth(10);
 
         cornerRadius = 25;
-
     }
 
     private void calculateGridDimensions() {
@@ -97,6 +91,32 @@ public class Match3GridView extends View {
         return tileHeight;
     }
 
+    public int getNodeDrawablePaddingX() {
+        return nodeDrawablePaddingX;
+    }
+
+    public int getNodeDrawablePaddingY() {
+        return nodeDrawablePaddingY;
+    }
+
+    public void setHoveringNode(Node node) {
+        this.hoveringNode = node;
+    }
+
+    public Tile getHoveredTile() {
+        return hoveredTile;
+    }
+
+    public void setHoveredTile(Tile hoveredTile) {
+        this.hoveredTile = hoveredTile;
+
+    }
+
+    public void setHoverPosition(int touchX, int touchY) {
+        this.touchX = touchX > this.getWidth() || touchX < 0 ? this.touchX : touchX;
+        this.touchY = touchY > this.getHeight() || touchY < 0 ? this.touchY : touchY;
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -105,6 +125,8 @@ public class Match3GridView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+
+        //TODO: only draw the entire grid when needed, ie. when swaps happen
 
         // draw background
         canvas.drawRoundRect(gridRect, cornerRadius, cornerRadius, backgroundPaint);
@@ -119,40 +141,34 @@ public class Match3GridView extends View {
         }
 
         // draw border
-        canvas.drawRoundRect(0,0,viewWidth, viewHeight, cornerRadius, cornerRadius, borderPaint);
-
+        canvas.drawRoundRect(0, 0, viewWidth, viewHeight, cornerRadius, cornerRadius, borderPaint);
 
         // draw nodes
-        // set bounds of the node drawables
         for (int row = 0; row < grid.getNumRows(); row++) {
             for (int col = 0; col < grid.getNumCols(); col++) {
-                if (grid.getTiles()[row][col] == movingTile) continue;
-                grid.getTiles()[row][col].getNode().getDrawable().setBounds(
-                        col*tileWidth+nodeDrawablePaddingX,
-                        row*tileHeight+nodeDrawablePaddingY,
-                        (col+1)*tileWidth-nodeDrawablePaddingX,
-                        (row+1)*tileHeight-nodeDrawablePaddingY
-                );
 
+                // don't draw the node of the currently hovered tile
+                if (grid.getTiles()[row][col] == hoveredTile) continue;
+
+                grid.getTiles()[row][col].getNode().getDrawable().setBounds(
+                        col * tileWidth + nodeDrawablePaddingX,
+                        row * tileHeight + nodeDrawablePaddingY,
+                        (col + 1) * tileWidth - nodeDrawablePaddingX,
+                        (row + 1) * tileHeight - nodeDrawablePaddingY
+                );
                 grid.getTiles()[row][col].getNode().getDrawable().draw(canvas);
             }
         }
 
-        if (movingTile != null) {
-
-            // draw node element of moving tile at touch position
-            // touch position should be middle of node element
-            // meaing the drawing bounds is skewed up and left
-
-            movingTile.getNode().getDrawable().setBounds(
-                    touchX - tileWidth/2 + nodeDrawablePaddingX,
-                    touchY - tileHeight/2 + nodeDrawablePaddingY,
-                    touchX + tileWidth/2 - nodeDrawablePaddingX,
-                    touchY + tileHeight/2 - nodeDrawablePaddingY
+        // draw the hovering node
+        if (hoveringNode != null) {
+            hoveringNode.getDrawable().setBounds(
+                    touchX - tileWidth / 2 + nodeDrawablePaddingX,
+                    touchY - tileHeight / 2 + nodeDrawablePaddingY,
+                    touchX + tileWidth / 2 - nodeDrawablePaddingX,
+                    touchY + tileHeight / 2 - nodeDrawablePaddingY
             );
-
-            Log.d("moving tile", ""+movingTile.getNode().getDrawable().getBounds());
-            movingTile.getNode().getDrawable().draw(canvas);
+            hoveringNode.getDrawable().draw(canvas);
         }
     }
 
@@ -162,15 +178,5 @@ public class Match3GridView extends View {
         super.performClick();
         return true;
     }
-
-    public void setMovingTile(int x, int y) {
-        setMovingTile(movingTile, x, y);
-    }
-
-    public void setMovingTile(Tile movingTile, int touchX, int touchY) {
-        this.movingTile = movingTile;
-        this.touchX = touchX;
-        this.touchY = touchY;
-    }
-
 }
+

@@ -3,6 +3,7 @@ package toonwire.match3;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -15,13 +16,13 @@ import java.util.Map;
 
 import androidx.appcompat.app.AppCompatActivity;
 import toonwire.match3.grid_elements.Match3Grid;
+import toonwire.match3.grid_elements.Node;
 import toonwire.match3.grid_elements.NodeElement;
 import toonwire.match3.grid_elements.Tile;
 
 public class Match3Controller {
     private Match3Grid match3GridModel;
     private Match3GridView match3GridView;
-
 
     public Match3Controller(final Match3Grid match3GridModel, final Match3GridView match3GridView) {
         this.match3GridModel = match3GridModel;
@@ -54,48 +55,60 @@ public class Match3Controller {
                 int x = (int) event.getX();
                 int y = (int) event.getY();
 
+                Tile hoveredTile = getTileFromTouch(x, y);
+
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        Log.d("touchEvent", "touched down");
+                        Node hoveringNode = hoveredTile.getNode();
 
-                        // Find the tile being touch down at
-                        int touchedTileRow = y/match3GridView.getTileWidth();
-                        int touchedTileCol = x/match3GridView.getTileHeight();
-
-                        Tile touchedTile = match3GridModel.getTiles()[touchedTileRow][touchedTileCol];
-
-                        Log.d("touched tile", touchedTile.toString());
-
-
-
-                        // draw the node element of the tile at the touch position
-//                        match3GridView.drawMovement(touchedTile, x, y);
-                        match3GridView.setMovingTile(touchedTile, x, y);
-
-
+                        match3GridView.setHoveringNode(hoveringNode);
+                        match3GridView.setHoveredTile(hoveredTile);
+                        match3GridView.setHoverPosition(x, y);
                         break;
+
                     case MotionEvent.ACTION_MOVE:
-                        Log.d("touchEvent", "moving: (" + x + ", " + y + ")");
+                        if (hoveredTile != match3GridView.getHoveredTile()) {
+                            // swap nodes
+                            Node temp = match3GridView.getHoveredTile().getNode();
+                            match3GridView.getHoveredTile().setNode(hoveredTile.getNode());
+                            hoveredTile.setNode(temp);
 
-                        // pass new touch coordinates to view
-                        match3GridView.setMovingTile(x, y);
-
+                            match3GridView.setHoveredTile(hoveredTile);
+                        }
+                        match3GridView.setHoverPosition(x, y);
                         break;
+
                     case MotionEvent.ACTION_UP:
-                        Log.d("touchEvent", "touched up");
-
-                        // Move is over, no more tiles moving
-                        match3GridView.setMovingTile(null, x, y);
-
-
+                        match3GridView.setHoveringNode(null);
+                        match3GridView.setHoveredTile(null);
                         break;
+
                     default:
-                        throw new IllegalStateException("Unexpected touch action: " + event.getAction());
+                        return false;
                 }
-                match3GridView.invalidate();
+                view.invalidate();
                 return true;
             }
         });
+    }
+
+    private Tile getTileFromTouch(int touchX, int touchY) {
+        int touchedTileRow = touchY/match3GridView.getTileHeight();
+        int touchedTileCol = touchX/match3GridView.getTileWidth();
+
+        Tile touchedTile;
+        try {
+            touchedTile = match3GridModel.getTiles()[touchedTileRow][touchedTileCol];
+        } catch (IndexOutOfBoundsException e) {
+            // put inside bounds at roughly the right place
+            if (touchedTileRow > match3GridModel.getNumRows()-1) touchedTileRow = match3GridModel.getNumRows()-1;
+            else if (touchedTileRow < 0) touchedTileRow = 0;
+            if (touchedTileCol > match3GridModel.getNumCols()-1) touchedTileCol = match3GridModel.getNumCols()-1;
+            else if (touchedTileCol < 0) touchedTileCol = 0;
+            touchedTile = match3GridModel.getTiles()[touchedTileRow][touchedTileCol];
+
+        }
+        return touchedTile;
     }
 
 }
